@@ -1,0 +1,10 @@
+<div class="message <%= msg.role %>">
+  <%= RailsLLM.markdown(msg.content).html_safe %>
+</div>
+
+<% if msg.reasoning_content.present? %>
+  <details class="reasoning">
+    <summary>Reasoning</summary>
+    <div class="content"><%= msg.reasoning_content %></div>
+  </details>
+<% end %>

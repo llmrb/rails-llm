@@ -1,0 +1,30 @@
+<div class="messages" id="messages">
+  <% if @messages.any? %>
+    <% @messages.each do |msg| %>
+      <%= render partial: "message", locals: { msg: } %>
+    <% end %>
+  <% else %>
+    <div class="empty-state">
+      <div class="icon">⚡</div>
+      <p>Start a conversation by typing below.</p>
+    </div>
+  <% end %>
+</div>
+
+<div class="input-area">
+  <%= form_tag ask_agent_path(@agent), method: :post, id: "ask-form", data: { turbo: false } do %>
+    <%= text_field_tag :prompt, nil,
+      placeholder: "Ask anything...",
+      autofocus: true,
+      required: true,
+      autocomplete: "off" %>
+    <%= submit_tag "Send", data: { disable_with: "..." } %>
+  <% end %>
+</div>
+
+<div class="runtime-bar">
+  <span class="dot idle"></span>
+  <span>llm.rb</span>
+  <span><%= @agent.usage.total_tokens || 0 %> tokens</span>
+  <span><%= @messages.size %> messages</span>
+</div>

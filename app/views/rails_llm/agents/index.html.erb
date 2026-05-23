@@ -1,0 +1,21 @@
+<div class="empty-state">
+  <div class="icon">⚡</div>
+  <p>Start a conversation below.</p>
+</div>
+
+<div class="input-area">
+  <%= form_tag agents_path, method: :post, id: "new-agent-form" do %>
+    <%= text_field_tag :prompt, nil,
+      placeholder: "Ask anything...",
+      autofocus: true,
+      autocomplete: "off" %>
+    <%= submit_tag "Start Chat", data: { disable_with: "..." } %>
+  <% end %>
+</div>
+
+<div class="runtime-bar">
+  <span class="dot idle"></span>
+  <span>llm.rb</span>
+  <span>0 tokens</span>
+  <span>0 messages</span>
+</div>

@@ -1,0 +1,8 @@
+# frozen_string_literal: true
+
+##
+# rails-llm.rb configuration.
+#
+# Set your API key via environment variables:
+#
+#   DEEPSEEK_API_KEY=...
