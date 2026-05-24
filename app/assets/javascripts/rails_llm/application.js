@@ -1,9 +1,17 @@
 ;(function() {
   const View = (messages) => {
-    const append = (role, content) => {
+    const append = (role, label, content) => {
       const node = document.createElement("div")
       node.className = `message ${role}`
-      node.textContent = content
+      const labelDiv = document.createElement("div")
+      labelDiv.className = "role-label"
+      labelDiv.textContent = `${label}:`
+      node.appendChild(labelDiv)
+      if (content) {
+        const contentDiv = document.createElement("div")
+        contentDiv.textContent = content
+        node.appendChild(contentDiv)
+      }
       messages.appendChild(node)
       messages.scrollTop = messages.scrollHeight
       return node
@@ -28,11 +36,31 @@
       messages,
       appendToolCall,
       appendAssistant() {
-        const node = append("assistant", "")
+        const node = document.createElement("div")
+        node.className = "message assistant"
+        const labelDiv = document.createElement("div")
+        labelDiv.className = "role-label"
+        labelDiv.textContent = "Robot:"
+        node.appendChild(labelDiv)
+        const contentDiv = document.createElement("div")
+        node.appendChild(contentDiv)
+        messages.appendChild(node)
+        messages.scrollTop = messages.scrollHeight
         return node
       },
       appendUser(content) {
-        return append("user", content)
+        const node = document.createElement("div")
+        node.className = "message user"
+        const labelDiv = document.createElement("div")
+        labelDiv.className = "role-label"
+        labelDiv.textContent = "You:"
+        node.appendChild(labelDiv)
+        const contentDiv = document.createElement("div")
+        contentDiv.textContent = content
+        node.appendChild(contentDiv)
+        messages.appendChild(node)
+        messages.scrollTop = messages.scrollHeight
+        return node
       },
       clearEmptyState() {
         const emptyState = messages.querySelector(".empty-state")
@@ -46,6 +74,16 @@
       },
       hideCursor(node) {
         node.classList.remove("streaming-cursor")
+      },
+      updateCounters(totalTokens, messageCount) {
+        const tokenEl = document.getElementById("token-count")
+        const msgEl = document.getElementById("message-count")
+        if (tokenEl && totalTokens != null) {
+          tokenEl.textContent = `${totalTokens} tokens`
+        }
+        if (msgEl && messageCount != null) {
+          msgEl.textContent = `${messageCount} messages`
+        }
       }
     }
   }
@@ -89,10 +127,13 @@
     const onEvent = (event) => {
       if (event.type == "done") {
         state.done = true
+        view.updateCounters(event.total_tokens, event.message_count)
         return
       }
       if (event.type == "content") {
-        ensureAssistantNode().innerHTML = event.content || ""
+        const node = ensureAssistantNode()
+        const contentDiv = node.querySelector(":scope > div:last-child")
+        if (contentDiv) contentDiv.innerHTML = event.content || ""
         view.focusBottom()
         return
       }

@@ -5,8 +5,9 @@
 
 <div class="input-area">
   <%= form_tag agents_path, method: :post, id: "new-agent-form" do %>
+    <div class="prompt">$</div>
     <%= text_field_tag :prompt, nil,
-      placeholder: "Ask anything...",
+      placeholder: "type your message...",
       autofocus: true,
       autocomplete: "off" %>
     <%= submit_tag "Start Chat", data: { disable_with: "..." } %>

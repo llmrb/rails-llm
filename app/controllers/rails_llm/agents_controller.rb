@@ -32,7 +32,10 @@ module RailsLLM
       response.headers["X-Accel-Buffering"] = "no"
       stream = Stream.new(response.stream)
       @agent.ask(prompt, stream:)
-      stream.finish
+      stream.finish(
+        total_tokens: @agent.usage.total_tokens,
+        message_count: messages.size
+      )
     ensure
       response.stream.close
     end

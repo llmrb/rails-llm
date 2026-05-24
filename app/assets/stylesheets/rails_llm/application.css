@@ -1,0 +1,642 @@
+/*
+ * rails-llm chat interface stylesheet
+ *
+ * Terminal-core design: dark, monospace, high contrast.
+ * Inspired by the REPL — messages read like command and output.
+ */
+
+/* ==========================================================================
+   Design tokens
+   ========================================================================== */
+
+:root {
+  --color-bg: #000000;
+  --color-surface: #000000;
+  --color-sidebar: #0d0d0d;
+  --color-sidebar-hover: #1a1a1a;
+  --color-sidebar-text: #555555;
+  --color-sidebar-text-active: #e5e5e5;
+  --color-accent: #22c55e;
+  --color-accent-dim: rgba(34, 197, 94, 0.12);
+  --color-accent-hover: #4ade80;
+  --color-text: #e5e5e5;
+  --color-text-secondary: #888888;
+  --color-text-muted: #444444;
+  --color-border: #1a1a1a;
+  --color-prompt: #22c55e;
+  --color-output: #e5e5e5;
+  --color-code-bg: #0a0a0a;
+  --color-code-text: #e5e5e5;
+  --color-reasoning-text: #666666;
+  --color-tool-text: #666666;
+  --color-runtime-bg: #0a0a0a;
+  --font-mono: "SF Mono", "Fira Code", "Fira Mono", "JetBrains Mono",
+               "Cascadia Code", "Menlo", "Consolas", monospace;
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+             "Helvetica Neue", Arial, sans-serif;
+  --sidebar-width: 260px;
+  --transition-fast: 0.15s ease;
+}
+
+/* ==========================================================================
+   Reset
+   ========================================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--color-bg);
+  color: var(--color-text);
+  height: 100vh;
+}
+
+/* ==========================================================================
+   Layout
+   ========================================================================== */
+
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* ==========================================================================
+   Sidebar
+   ========================================================================== */
+
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--color-sidebar);
+  color: var(--color-sidebar-text);
+  padding: 20px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--color-border);
+}
+
+.sidebar .brand {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sidebar .brand .product-sub {
+  font-size: 10px;
+  color: var(--color-accent);
+  font-weight: 500;
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+}
+
+.sidebar .new-agent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--color-sidebar-text);
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-bottom: 8px;
+}
+
+.sidebar .new-agent:hover {
+  background: var(--color-sidebar-hover);
+  border-color: var(--color-accent);
+  color: var(--color-sidebar-text-active);
+}
+
+.sidebar .new-agent .plus {
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.sidebar nav {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar .agent-link {
+  display: block;
+  padding: 6px 12px;
+  color: var(--color-sidebar-text);
+  text-decoration: none;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  transition: all var(--transition-fast);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.5;
+  border-left: 2px solid transparent;
+}
+
+.sidebar .agent-link:hover {
+  color: var(--color-sidebar-text-active);
+}
+
+.sidebar .agent-link.active {
+  color: var(--color-sidebar-text-active);
+  border-left-color: var(--color-accent);
+  padding-left: 10px;
+}
+
+.sidebar .powered-by {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-top: 8px;
+  border-top: 1px solid var(--color-border);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.sidebar .powered-by::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.sidebar .powered-by:hover {
+  color: var(--color-accent);
+}
+
+.sidebar .powered-by:hover::before {
+  background: var(--color-accent-hover);
+}
+
+/* ==========================================================================
+   Main content area
+   ========================================================================== */
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--color-bg);
+}
+
+/* ==========================================================================
+   Messages container
+   ========================================================================== */
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scroll-behavior: smooth;
+}
+
+/* ==========================================================================
+   Individual messages (REPL style)
+   ========================================================================== */
+
+.message {
+  max-width: 800px;
+  width: 100%;
+  line-height: 1.6;
+  font-size: 14px;
+  font-family: var(--font-mono);
+  color: var(--color-output);
+  animation: messageFadeIn 0.15s ease;
+}
+
+@keyframes messageFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.message .role-label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  user-select: none;
+}
+
+.message.user .role-label {
+  color: var(--color-accent);
+}
+
+.message.assistant .role-label {
+  color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   Message content (markdown rendering)
+   ========================================================================== */
+
+.message.assistant > :first-child { margin-top: 0; }
+.message.assistant > :last-child { margin-bottom: 0; }
+
+.message.assistant p {
+  line-height: 1.6;
+}
+
+.message.assistant p + p,
+.message.assistant ul,
+.message.assistant ol,
+.message.assistant pre,
+.message.assistant blockquote,
+.message.assistant table {
+  margin-top: 10px;
+}
+
+.message.assistant h1,
+.message.assistant h2,
+.message.assistant h3,
+.message.assistant h4,
+.message.assistant h5,
+.message.assistant h6 {
+  line-height: 1.3;
+  color: var(--color-text);
+  margin: 14px 0 6px;
+  font-weight: 600;
+}
+
+.message.assistant h1,
+.message.assistant h2 { font-size: 16px; }
+.message.assistant h3 { font-size: 15px; }
+.message.assistant h4,
+.message.assistant h5,
+.message.assistant h6 { font-size: 14px; }
+
+.message.assistant h1:first-child,
+.message.assistant h2:first-child,
+.message.assistant h3:first-child {
+  margin-top: 0;
+}
+
+.message.assistant ul,
+.message.assistant ol {
+  padding-left: 24px;
+}
+
+.message.assistant li + li {
+  margin-top: 3px;
+}
+
+.message.assistant li p {
+  margin: 0;
+}
+
+.message.assistant a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.message.assistant a:hover {
+  color: var(--color-accent-hover);
+}
+
+.message.assistant code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-accent);
+  word-break: break-word;
+}
+
+.message.assistant pre {
+  overflow-x: auto;
+  padding: 12px 14px;
+  background: var(--color-code-bg);
+  color: var(--color-code-text);
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid var(--color-border);
+}
+
+.message.assistant pre code {
+  display: block;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  white-space: pre;
+  tab-size: 2;
+  word-break: normal;
+}
+
+/* Syntax highlighting tokens */
+.message.assistant pre code .c,
+.message.assistant pre code .c1,
+.message.assistant pre code .cm { color: #666666; }
+
+.message.assistant pre code .k,
+.message.assistant pre code .kd,
+.message.assistant pre code .kn,
+.message.assistant pre code .kp { color: #f472b6; }
+
+.message.assistant pre code .s,
+.message.assistant pre code .s1,
+.message.assistant pre code .s2 { color: #86efac; }
+
+.message.assistant pre code .nf,
+.message.assistant pre code .nc,
+.message.assistant pre code .no { color: #7dd3fc; }
+
+.message.assistant pre code .mi,
+.message.assistant pre code .mf { color: #fdba74; }
+
+.message.assistant pre code .na { color: #a78bfa; }
+
+.message.assistant pre code .nb { color: #f5f5f4; }
+
+.message.assistant blockquote {
+  border-left: 2px solid var(--color-accent);
+  padding-left: 12px;
+  color: var(--color-text-secondary);
+}
+
+.message.assistant table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  overflow-x: auto;
+  display: block;
+}
+
+.message.assistant th,
+.message.assistant td {
+  border: 1px solid var(--color-border);
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.message.assistant th {
+  font-weight: 600;
+}
+
+.message.assistant img {
+  max-width: 100%;
+  height: auto;
+  margin: 8px 0;
+}
+
+.message.assistant hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 16px 0;
+}
+
+/* ==========================================================================
+   Reasoning panel
+   ========================================================================== */
+
+.reasoning {
+  max-width: 800px;
+  width: 100%;
+  padding: 0 0 0 16px;
+  margin-top: -12px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--color-reasoning-text);
+}
+
+.reasoning summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--color-reasoning-text);
+  user-select: none;
+  font-size: 11px;
+}
+
+.reasoning summary:hover {
+  color: var(--color-text-secondary);
+}
+
+.reasoning .content {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-reasoning-text);
+  white-space: pre-wrap;
+}
+
+/* ==========================================================================
+   Tool call panels
+   ========================================================================== */
+
+.tool-call {
+  max-width: 800px;
+  width: 100%;
+  padding: 0 0 0 16px;
+  margin-top: -12px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--color-tool-text);
+}
+
+.tool-call summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--color-tool-text);
+  user-select: none;
+  font-size: 11px;
+}
+
+.tool-call summary:hover {
+  color: var(--color-text-secondary);
+}
+
+.tool-call .tool-name {
+  color: var(--color-accent);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.tool-call pre {
+  margin-top: 6px;
+  background: var(--color-code-bg);
+  color: var(--color-code-text);
+  padding: 10px 12px;
+  font-size: 12px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  border: 1px solid var(--color-border);
+}
+
+/* ==========================================================================
+   Input area
+   ========================================================================== */
+
+.input-area {
+  border-top: 1px solid var(--color-border);
+  padding: 12px 32px;
+  background: var(--color-bg);
+}
+
+.input-area form {
+  display: flex;
+  gap: 0;
+  max-width: 800px;
+  margin: 0 auto;
+  align-items: stretch;
+}
+
+.input-area .prompt {
+  display: flex;
+  align-items: center;
+  color: var(--color-prompt);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  padding-right: 10px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.input-area input[type="text"] {
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  font-size: 14px;
+  font-family: var(--font-mono);
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+}
+
+.input-area input[type="text"]::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input-area button,
+.input-area input[type="submit"] {
+  background: transparent;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  padding: 8px 16px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.input-area button:hover,
+.input-area input[type="submit"]:hover {
+  background: var(--color-accent-dim);
+}
+
+.input-area button:disabled,
+.input-area input[type="submit"]:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Empty state
+   ========================================================================== */
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #ffffff;
+  text-align: center;
+  padding: 40px 20px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.empty-state .icon {
+  font-size: 32px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 13px;
+  max-width: 300px;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   Runtime bar
+   ========================================================================== */
+
+.runtime-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 32px;
+  background: var(--color-runtime-bg);
+  border-top: 1px solid var(--color-border);
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}
+
+.runtime-bar .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 0;
+  background: var(--color-accent);
+  display: inline-block;
+}
+
+.runtime-bar .dot.idle {
+  background: var(--color-text-muted);
+}
+
+.runtime-bar span {
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Typewriter cursor
+   ========================================================================== */
+
+.streaming-cursor::after {
+  content: "";
+  animation: typewriter 0.6s step-end infinite;
+  display: inline-block;
+  width: 1px;
+  height: 1em;
+  background: var(--color-accent);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+}
+
+@keyframes typewriter {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .messages { padding: 16px; }
+  .input-area { padding: 12px 16px; }
+  .message { max-width: 100%; font-size: 13px; }
+}

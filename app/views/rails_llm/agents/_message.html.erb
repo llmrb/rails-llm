@@ -1,4 +1,5 @@
 <div class="message <%= msg.role %>">
+  <div class="role-label"><%= msg.user? ? "You" : "Robot" %>:</div>
   <%= RailsLLM.markdown(msg.content).html_safe %>
 </div>
 

@@ -55,9 +55,11 @@ module RailsLLM
     end
 
     ##
+    # @param [Integer, nil] total_tokens
+    # @param [Integer, nil] message_count
     # @return [void]
-    def finish
-      write(type: "done")
+    def finish(total_tokens: nil, message_count: nil)
+      write(type: "done", total_tokens:, message_count:)
     end
 
     private

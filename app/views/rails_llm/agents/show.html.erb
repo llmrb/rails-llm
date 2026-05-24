@@ -13,8 +13,9 @@
 
 <div class="input-area">
   <%= form_tag ask_agent_path(@agent), method: :post, id: "ask-form", data: { turbo: false } do %>
+    <div class="prompt">$</div>
     <%= text_field_tag :prompt, nil,
-      placeholder: "Ask anything...",
+      placeholder: "type your message...",
       autofocus: true,
       required: true,
       autocomplete: "off" %>
@@ -25,6 +26,6 @@
 <div class="runtime-bar">
   <span class="dot idle"></span>
   <span>llm.rb</span>
-  <span><%= @agent.usage.total_tokens || 0 %> tokens</span>
-  <span><%= @messages.size %> messages</span>
+  <span id="token-count"><%= @agent.usage.total_tokens || 0 %> tokens</span>
+  <span id="message-count"><%= @messages.size %> messages</span>
 </div>
