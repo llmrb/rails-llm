@@ -73,7 +73,7 @@ export DEEPSEEK_API_KEY=...
 
 **5. Profit**
 
-Open your browser: 
+Open your browser:
 
 ```bash
 open http://localhost:3000/ai/agents
@@ -121,6 +121,10 @@ agent.ask("Tell me a story") { |chunk| print chunk }      # streaming
 | GET | `/ai/agents/:id` | View an agent |
 | POST | `/ai/agents` | Create a new agent |
 | POST | `/ai/agents/:id/ask` | Send a message |)
+
+#### Screenshot
+
+![screenshot](screenshot.png)
 
 ## License
 
